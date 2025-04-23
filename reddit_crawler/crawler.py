@@ -1,5 +1,5 @@
 import sys, json
-from reddit_crawler.request import fetch   # Include "fetch" function from
+from reddit_crawler.request import fetch   # Include "fetch" function from requests.py
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
