@@ -6,26 +6,33 @@ name = "data"
 firstfile = True
 
 #dictionary is a dictionary object and lastfile is a bool 
-#lastfile is used to check for the last inputted value to
-# add closing ']' to the json file
-
-def write_json(dictionary, lastfile):
+#endfile is used to check for the last inputted value to the json file
+# to add closing ']' to the json file
+def write_json(dictionary, endfile):
 	global count, name, firstfile
-	#json_object = json.dumps(dictionary, indent=4)
 
+	if endfile:
+		with open(name + str(count) + ".json", "r+") as outfile:
+			outfile.seek(0, 2)
+			size = outfile.tell()
+			outfile.seek(size - 1)
+			if outfile.read(1) == ',':
+				outfile.seek(size - 1)
+				outfile.truncate()
+			outfile.write(']')
+		return
+	
 	if firstfile:
 		with open(name + str(count) + ".json", "w") as outfile:
 			outfile.write('[')
-			#outfile.write(json_object)
 			json.dump(dictionary, outfile)
 			outfile.write(",")
 		firstfile = False
 
 	else:
-		with open(name + str(count) + ".json", "a") as outfile:
-			
+		with open(name + str(count) + ".json", "a") as outfile:	
+
 			outfile.write("\n")
-			#outfile.write(json_object)
 			json.dump(dictionary, outfile)
 			outfile.flush()
 
@@ -33,7 +40,7 @@ def write_json(dictionary, lastfile):
 			filesize = os.path.getsize(filepath)
 
 			#CHANGE 1000 TO 1e7 FOR 10MB
-			if filesize >= 1000 or lastfile:
+			if filesize >= 10000:
 				outfile.write("]")
 				outfile.close()
 				count += 1
@@ -42,7 +49,7 @@ def write_json(dictionary, lastfile):
 			else:
 				outfile.write(",")
 
-for i in range(50):
+for i in range(500):
 	#dictionary needed for json format
 	dictionary = {
 	"Post Title": "Funny",
