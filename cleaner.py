@@ -2,7 +2,11 @@ import os  #used for file and directory manipulation
 import hashlib #creattes hashes for detecting duplicates
 import requests  # allows us to make HTTP requests
 import json #used for parsing JSON data
-from bs4 import BeautifulSoup #used for parsing HTML and XML documents
+import praw 
+
+
+
+reddit = praw.Reddit(client_id = 'YOUR_CLIENT_ID',client_secret = 'YOUR_CLIENT_SECRET',user_agent = 'YOUR_USER_AGENT') #initialize the Reddit API
 
 input_dir = 'raw_data' #folder with raw json files
 output_dir = 'cleaned_data' #folder to save cleaned data
@@ -19,11 +23,10 @@ def read_json_lines(filepath):
             except json.JSONDecodeError:
                 continue #for malformed lines
 
-def get_file_from_url(url):# fethces title from a URL
+def get_reddit_post_title(url):# fethces title from a URL
     try:
-        response = requests.get(url, timeout = 3)
-        soup = BeautifulSoup(response.content, 'html.parser')
-        return soup.title.string() if soup.title else None
+        submission = reddit.submission (url = url)
+        return submission.title
     except Exception:
         return None
     
@@ -45,10 +48,10 @@ def clean_post(post, seen_hashes):  #cleans a single post
     post['title'] = title.lower()
     post['selftext'] = body.lower()
 
-    if 'url' in post and post['url'].startswith('http'): #if the post has a URL keep it
-        html_title = get_file_from_url(post['url'])
-        if html_title:
-            post['url_title'] = html_title
+    if 'url' in post and 'reddit.com' in post['url']: #only get reddit titles
+        reddit_title = get_reddit_post_title(post['url'])
+        if reddit_title:
+            post['url_title'] = reddit_title
 
     return post
 
@@ -90,4 +93,5 @@ def clean_all_files():
 if __name__ == '__main__':
     clean_all_files() #call the function to clean all files
     print("Cleaning completed.")
+    
     
