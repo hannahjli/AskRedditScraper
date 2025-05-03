@@ -1,4 +1,4 @@
-import sys, json, os, re
+import sys, json, os,
 from reddit_crawler.request import fetch   # Include "fetch" function from requests.py
 
 count = 0
@@ -21,9 +21,9 @@ def data_clean(response):
 	# 	if hasattr(comment, "body"):
 	# 		comments.append(comment.body)
 
-	#DOWNVOTES NO LONGER AVAILABLE
-	pattern = r'https?://\S+|www\.\S+'
-	links = re.findall(pattern, response.selftext)
+	#pattern = r'https?://\S+|www\.\S+'
+	#links = re.findall(pattern, response.selftext)
+	
 	dictionary = {
 		
 		"Post Title": response.title,
