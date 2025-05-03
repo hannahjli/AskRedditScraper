@@ -1,4 +1,4 @@
-import sys, json, os,
+import sys, json, os
 from reddit_crawler.request import fetch   # Include "fetch" function from requests.py
 
 count = 0
