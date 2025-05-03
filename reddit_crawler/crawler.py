@@ -1,5 +1,85 @@
-import sys, json
+import sys, json, os, re
 from reddit_crawler.request import fetch   # Include "fetch" function from requests.py
+
+count = 0
+name = "data"
+firstfile = True
+processed_ids = set()
+
+def data_clean(response):
+	global processed_ids
+
+    # Check if the post ID is already processed
+	if response.id in processed_ids:
+		return 
+
+	processed_ids.add(response.id)
+
+	#ADDS COMMENTS TO THE JSON FILE
+	# comments = []
+	# for comment in response.comments:
+	# 	if hasattr(comment, "body"):
+	# 		comments.append(comment.body)
+
+	#DOWNVOTES NO LONGER AVAILABLE
+	pattern = r'https?://\S+|www\.\S+'
+	links = re.findall(pattern, response.selftext)
+	dictionary = {
+		
+		"Post Title": response.title,
+		"Selftext": response.selftext,
+		"URL": response.permalink,
+		"Links": response.url,
+		"Username": response.author.name,
+		"Upvotes": response.ups,
+		"Comments": response.num_comments
+	}
+	write_json(dictionary,False)
+
+#dictionary is a dictionary object and lastfile is a bool 
+#endfile is used to check for the last inputted value to the json file
+# to add closing ']' to the json file
+def write_json(dictionary, endfile):
+	global count, name, firstfile
+
+	if endfile:
+		with open(name + str(count) + ".json", "r+", encoding = 'utf-8') as outfile:
+			outfile.seek(0, 2)
+			size = outfile.tell()
+			outfile.seek(size - 1)
+			if outfile.read(1) == ',':
+				outfile.seek(size - 1)
+				outfile.truncate()
+			outfile.write(']')
+
+		return
+	
+	if firstfile:
+		with open(name + str(count) + ".json", "w", encoding = 'utf-8') as outfile:
+			outfile.write('[')
+			json.dump(dictionary, outfile, ensure_ascii=False)
+			outfile.write(",")
+		firstfile = False
+
+	else:
+		with open(name + str(count) + ".json", "a", encoding = 'utf-8') as outfile:	
+
+			outfile.write("\n")
+			json.dump(dictionary, outfile, ensure_ascii=False)
+			outfile.flush()
+
+			filepath = os.path.join(os.getcwd(), name + str(count) + ".json")
+			filesize = os.path.getsize(filepath)
+
+			#CHANGE 1000 TO 1e7 FOR 10MB
+			if filesize >= 10000:
+				outfile.write("]")
+				outfile.close()
+				count += 1
+				firstfile = True
+			
+			else:
+				outfile.write(",")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -17,9 +97,8 @@ if __name__ == "__main__":
 
         for url in open(filename, "r"):
             response = fetch(url) # Send request
-            # just show something prove-it-works:
-            print(json.dumps(
-                {"id": response.id, "title": response.title}, ensure_ascii=False
-            ))
+            data_clean(response)
+ 
+        write_json({}, True)
     except KeyboardInterrupt:
-        print("\n⏹  stopped by user")
+        print("\n⏹  stopped by user") 
