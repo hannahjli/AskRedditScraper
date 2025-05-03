@@ -3,8 +3,12 @@ from reddit_crawler.request import fetch   # Include "fetch" function from reque
 
 count = 0
 name = "data"
+output_dir = "data_files"
 firstfile = True
 processed_ids = set()
+
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
 
 def data_clean(response):
 	global processed_ids
@@ -41,9 +45,10 @@ def data_clean(response):
 # to add closing ']' to the json file
 def write_json(dictionary, endfile):
 	global count, name, firstfile
+	file_path = os.path.join(output_dir, f"{name}{count}.json")
 
 	if endfile:
-		with open(name + str(count) + ".json", "r+", encoding = 'utf-8') as outfile:
+		with open(file_path, "r+", encoding = 'utf-8') as outfile:
 			outfile.seek(0, 2)
 			size = outfile.tell()
 			outfile.seek(size - 1)
@@ -55,14 +60,14 @@ def write_json(dictionary, endfile):
 		return
 	
 	if firstfile:
-		with open(name + str(count) + ".json", "w", encoding = 'utf-8') as outfile:
+		with open(file_path, "w", encoding = 'utf-8') as outfile:
 			outfile.write('[')
 			json.dump(dictionary, outfile, ensure_ascii=False)
 			outfile.write(",")
 		firstfile = False
 
 	else:
-		with open(name + str(count) + ".json", "a", encoding = 'utf-8') as outfile:	
+		with open(file_path, "a", encoding = 'utf-8') as outfile:	
 
 			outfile.write("\n")
 			json.dump(dictionary, outfile, ensure_ascii=False)
