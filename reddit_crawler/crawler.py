@@ -32,7 +32,7 @@ def data_clean(response):
 		
 		"Post Title": response.title,
 		"Selftext": response.selftext,
-		"URL": response.permalink,
+		"URL": "https://www.reddit.com" + response.permalink,
 		"Links": response.url,
 		"Username": response.author.name,
 		"Upvotes": response.ups,
@@ -73,7 +73,7 @@ def write_json(dictionary, endfile):
 			json.dump(dictionary, outfile, ensure_ascii=False)
 			outfile.flush()
 
-			filepath = os.path.join(os.getcwd(), name + str(count) + ".json")
+			filepath = os.path.join(output_dir, f"{name}{count}.json")
 			filesize = os.path.getsize(filepath)
 
 			#CHANGE 1000 TO 1e7 FOR 10MB
