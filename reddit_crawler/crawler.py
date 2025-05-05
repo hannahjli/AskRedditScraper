@@ -87,16 +87,21 @@ def write_json(dictionary, endfile):
 				outfile.write(",")
 				
 def parse(text):
-    urls = set() # Initialize a set to store URLs
+    urls = set()  # Initialize a set to store URLs
     
     # Find URLs in the selftext
-    urls.update(re.findall(r'(https?://\S+)', text.selftext))
+    all_urls = re.findall(r'(https?://\S+)', text.selftext)
+    
+    # Filter URLs to include only valid subreddit post links
+    for url in all_urls:
+        if re.match(r'https?://(www\.)?reddit\.com/r/\w+/comments/\w+', url):
+            urls.add(url)
     
     return urls
 
 def crawl_thread(frontier, max_rpm=60):
     while frontier:
-        if count > 10:
+        if count > 9:
             return # Stop crawling after 10 files
         url = frontier[0] # Get the first URL from the frontier
         text = fetch(url, max_rpm=60) # Get the selftext of the URL
@@ -133,10 +138,10 @@ if __name__ == "__main__":
             password=os.getenv("REDDIT_PASSWORD"),
         )
         
-        for submission in reddit.subreddit(subreddit_home).hot(limit=25):
+        for submission in reddit.subreddit(subreddit_home).top(time_filter="all",limit=15000):
             seeds.append("https://www.reddit.com" + submission.permalink) # Add the submission URL to the seeds list
             
         crawl_thread(seeds, max_rpm=60) # Start crawling threads
-        write_json({}, True)
+
     except KeyboardInterrupt:
         print("\n⏹  stopped by user") 
