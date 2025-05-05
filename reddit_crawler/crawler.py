@@ -7,6 +7,10 @@ def store_document(url, submission):
         "url": url,
         "title": submission.title,
         "selftext": submission.selftext,
+        "subreddit": submission.subreddit.display_name,
+        "author": submission.author.name if submission.author else None,
+        "created_utc": submission.created_utc,
+        "num_comments": submission.num_comments,
     }
 
     return data
