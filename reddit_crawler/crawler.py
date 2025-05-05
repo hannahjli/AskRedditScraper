@@ -2,20 +2,6 @@ import sys, json, os
 import re
 from reddit_crawler.request import fetch   # Include "fetch" function from requests.py
 
-def store_document(url, submission):
-    data = {
-        "url": url,
-        "title": submission.title,
-        "selftext": submission.selftext,
-        "subreddit": submission.subreddit.display_name,
-        "author": submission.author.name if submission.author else None,
-        "created_utc": submission.created_utc,
-        "num_comments": submission.num_comments,
-    }
-
-    return data
-    # Save `data` somewhere: database, JSON file, etc.
-
 def parse(text):
     urls = []
     
@@ -30,8 +16,7 @@ def crawl_thread(frontier, max_rpm=60):
     while not frontier:
         try:
             text = fetch(url, max_rpm=max_rpm)
-            doc = store_document(url, text)
-            write_json(doc, False) # Save the document to a JSON file
+            data_clean(text)
         
             for found_urls in parse(text):
                 if found_urls not in frontier:
@@ -62,15 +47,6 @@ def data_clean(response):
 		return 
 
 	processed_ids.add(response.id)
-
-	#ADDS COMMENTS TO THE JSON FILE
-	# comments = []
-	# for comment in response.comments:
-	# 	if hasattr(comment, "body"):
-	# 		comments.append(comment.body)
-
-	#pattern = r'https?://\S+|www\.\S+'
-	#links = re.findall(pattern, response.selftext)
 	
 	dictionary = {
 		
@@ -152,7 +128,6 @@ if __name__ == "__main__":
                 {"id": response.id, "title": response.title}, ensure_ascii=False
             ))
             seeds.append(url) # Add the URL to the seeds list
-            data_clean(response)
         
         crawl_thread(seeds, max_rpm=60) # Start crawling threads
         write_json({}, True)
