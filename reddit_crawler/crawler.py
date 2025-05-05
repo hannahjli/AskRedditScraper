@@ -101,7 +101,7 @@ def parse(text):
 
 def crawl_thread(frontier, max_rpm=60):
     while frontier:
-        if count > 9:
+        if count > max_count:
             return # Stop crawling after 10 files
         url = frontier[0] # Get the first URL from the frontier
         text = fetch(url, max_rpm=60) # Get the selftext of the URL
@@ -137,7 +137,25 @@ if __name__ == "__main__":
             username=os.getenv("REDDIT_USERNAME"),
             password=os.getenv("REDDIT_PASSWORD"),
         )
+
+        global max_count
         
+        if (subreddit_home == "AskReddit"):
+            count = 0
+            max_count = 9
+        elif (subreddit_home == "AITAH"):
+            count = 10
+            max_count = 19
+        elif (subreddit_home == "askscience"):
+            count = 20
+            max_count = 29
+        elif (subreddit_home == "explainlikeimfive"):
+            count = 30   
+            max_count = 39
+        elif (subreddit_home == "scarystories"):
+            count = 40
+            max_count = 49
+
         for submission in reddit.subreddit(subreddit_home).top(time_filter="all",limit=15000):
             seeds.append("https://www.reddit.com" + submission.permalink) # Add the submission URL to the seeds list
             
