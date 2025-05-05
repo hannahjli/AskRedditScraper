@@ -78,3 +78,46 @@ def fetch(url: str, max_rpm: int = 60):
     # All accounts hit the limit; last resort – wait a minute then raise
     time.sleep(60)
     raise RuntimeError("All accounts rate‑limited (429); try again later")
+
+def top_submissions(
+    sub_name: str,
+    *,
+    time_filter: str = "all",
+    limit: int | None = None,
+    max_rpm: int = 60,
+):
+    """
+    Yield at most `limit` submissions from r/{sub_name}.top().
+    Handles 429 by hopping to the next configured Reddit account
+    and continues from the last seen post.
+    """
+    fetched = 0
+    after = None                     # fullname of the last item
+    global _current
+
+    while limit is None or fetched < limit:
+        # throttle BEFORE every network call
+        _respect_rate(_current, max_rpm)
+
+        try:
+            page_limit = (
+                None if limit is None else min(100, limit - fetched)
+            )                       # Reddit caps at 100 per call
+            gen = _current.subreddit(sub_name).top(
+                time_filter=time_filter,
+                limit=page_limit,
+                params={"after": after} if after else None,
+            )
+
+            for sub in gen:
+                yield sub
+                fetched += 1
+                after = sub.fullname
+                if limit is not None and fetched >= limit:
+                    break
+
+        except PrawcoreException as e:
+            if getattr(getattr(e, "response", None), "status_code", None) == 429:
+                _current = _switch_account()
+                continue
+            raise

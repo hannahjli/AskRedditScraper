@@ -1,6 +1,6 @@
 import sys, json, os
 import re
-from reddit_crawler.request import fetch   # Include "fetch" function from requests.py
+from reddit_crawler.request import top_submissions, fetch   # Include "fetch" function from requests.py
 import praw
 
 count = 0
@@ -130,14 +130,6 @@ if __name__ == "__main__":
             print("Argument must be an integer")
             sys.exit(1)
 
-        reddit = praw.Reddit(
-            client_id=os.getenv("REDDIT_CLIENT_ID"),
-            client_secret=os.getenv("REDDIT_CLIENT_SECRET"),
-            user_agent="team-crawler (requester)",
-            username=os.getenv("REDDIT_USERNAME"),
-            password=os.getenv("REDDIT_PASSWORD"),
-        )
-
         global max_count
         
         if (subreddit_home == "AskReddit"):
@@ -156,8 +148,8 @@ if __name__ == "__main__":
             count = 40
             max_count = 49
 
-        for submission in reddit.subreddit(subreddit_home).top(time_filter="all",limit=15000):
-            seeds.append("https://www.reddit.com" + submission.permalink) # Add the submission URL to the seeds list
+        for sub in top_submissions(subreddit_home, time_filter="all", limit=15000):
+            seeds.append("https://www.reddit.com" + sub.permalink) # Add the submission URL to the seeds list
             
         crawl_thread(seeds, max_rpm=60) # Start crawling threads
 
