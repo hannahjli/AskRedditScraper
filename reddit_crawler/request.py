@@ -92,7 +92,7 @@ def init_reddit_sessions():
    
     if not _sessions:
         print(f"Failed to initialize even fallback session: {e}")
-            raise RuntimeError("No valid Reddit sessions could be initialized. Check your environment variables.")
+        raise RuntimeError("No valid Reddit sessions could be initialized. Check your environment variables.")
    
     # Set the first session as current
     _current = _sessions[0]
