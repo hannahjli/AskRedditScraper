@@ -13,25 +13,33 @@ if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 
 def data_clean(response):
-	global processed_ids
+    global processed_ids
 
     # Check if the post ID is already processed
-	if response.id in processed_ids:
-		return 
+    if response.id in processed_ids:
+        return 
 
-	processed_ids.add(response.id)
+    processed_ids.add(response.id)
+        
+    if response.author is not None:
+        name = response.author.name
+    else:
+        name = "n/a"
 	
-	dictionary = {
-		
-		"Post Title": response.title,
-		"Selftext": response.selftext,
-		"URL": "https://www.reddit.com" + response.permalink,
-		"Links": response.url,
-		"Username": response.author.name,
-		"Upvotes": response.ups,
-		"Comments": response.num_comments
-	}
-	write_json(dictionary,False)
+    dictionary = {
+        "Post Title": response.title,
+        "Subreddit": response.subreddit.display_name,
+        "Selftext": response.selftext,
+        "Post ID": response.id,
+        "Post Date": response.created_utc,
+        "Post Score": response.score,
+        "URL": "https://www.reddit.com" + response.permalink,
+        "Links": response.url,
+        "Username": name,
+        "Upvotes": response.ups,
+        "Comments": response.num_comments,
+    }
+    write_json(dictionary,False)
 
 #dictionary is a dictionary object and lastfile is a bool 
 #endfile is used to check for the last inputted value to the json file
@@ -69,7 +77,7 @@ def write_json(dictionary, endfile):
 			filesize = os.path.getsize(filepath)
 
 			#CHANGE 1000 TO 1e7 FOR 10MB
-			if filesize >= 10000:
+			if filesize >= 1e7:
 				outfile.write("]")
 				outfile.close()
 				count += 1
@@ -88,22 +96,19 @@ def parse(text):
 
 def crawl_thread(frontier, max_rpm=60):
     while frontier:
-        try:
-            url = frontier[0] # Get the first URL from the frontier
-            text = fetch(url, max_rpm=60) # Get the selftext of the URL
-            data_clean(text) # Clean the data and write to JSON
-        
-            for found_urls in parse(text):
-                if found_urls not in frontier:
-                    # Check if the URL is already in the frontier to avoid duplicates
-                    frontier.append(found_urls) # Add found URLs to the frontier
+        if count > 10:
+            return # Stop crawling after 10 files
+        url = frontier[0] # Get the first URL from the frontier
+        text = fetch(url, max_rpm=60) # Get the selftext of the URL
+        data_clean(text) # Clean the data and write to JSON
+    
+        for found_urls in parse(text):
+            if found_urls not in frontier:
+                # Check if the URL is already in the frontier to avoid duplicates
+                frontier.append(found_urls) # Add found URLs to the frontier
 
-        except Exception as e:
-            print(f"Error crawling {url}: {e}")
-
-        finally:
-            frontier.pop(0)
-            # Remove the crawled URL from the frontier
+        frontier.pop(0)
+        # Remove the crawled URL from the frontier
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
